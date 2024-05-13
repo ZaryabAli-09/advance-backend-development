@@ -1,7 +1,7 @@
 {
   "name": "backend-course",
   "version": "1.0.0",
-  "description": "a basic app",
+  "description": "Api development and data modeling",
   "main": "index.js",
   "type": "module",
   "scripts": {
