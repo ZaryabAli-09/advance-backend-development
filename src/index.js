@@ -1,17 +1,20 @@
+import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./db/db.js";
-import { app } from "./app.js";
+import cors from "cors";
 
 dotenv.config();
-
-const port = process.env.PORT || 3000;
-
-connectDB()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`App listening on port ${port}`);
-    });
+const app = express();
+// .......................................
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
   })
-  .catch((error) => {
-    console.log("MONGODB connection failed !!! ", error);
-  });
+);
+
+// .......................................
+app.listen(process.env.PORT || 3000, () => {
+  connectDB();
+  console.log(`App listening on port ${process.env.PORT}`);
+});
