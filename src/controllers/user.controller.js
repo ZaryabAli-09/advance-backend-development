@@ -29,7 +29,7 @@ const registerUser = async (req, res) => {
       return res.status(400).send("Error occur while uploading avatar");
     }
 
-    const refreshToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
+    const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN_SECRET);
 
     const encrptedPassword = bcryptjs.hashSync(password, 10);
 
@@ -86,14 +86,22 @@ const loginUser = async (req, res) => {
     }
 
     const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
-
-    res.cookie("access_token", accessToken);
-    validUser.password = undefined;
+    const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN_SECRET);
     validUser.refreshToken = undefined;
-    res.status(200).json({
-      message: "User logged in successfully",
-      userData: validUser,
-    });
+    validUser.password = undefined;
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    res
+      .status(200)
+      .cookie("access_token", accessToken, options)
+      .cookie("refresh_token", refreshToken, options)
+      .json({
+        message: "User logged in successfully",
+        userData: validUser,
+        tokens: { refreshToken, accessToken },
+      });
 
     // get user details from body
     // check if user is valid --is user registered in db
