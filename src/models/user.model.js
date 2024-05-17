@@ -6,22 +6,22 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
+    },
+    fullName: {
+      type: String,
+      required: true,
+      index: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
     },
-    fullname: {
+    password: {
       type: String,
-      required: true,
-      trim: true,
-      index: true,
+      required: [true, "Password is required"],
     },
+
     avatar: {
       type: String,
       required: true,
@@ -30,16 +30,13 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    username: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Video",
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-    },
+
     refreshToken: {
       type: String,
+    },
+    watchHistory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Video",
     },
   },
   { timestamps: true }
