@@ -3,7 +3,7 @@ import { uploadOnCloudinary } from "../utils/cloudinaryConfig.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// generating access and refresh token
+// generating access and refresh token functions
 const refreshTokenGenerator = (email) => {
   const refreshTokenGenerator = jwt.sign(
     { email },
@@ -17,6 +17,14 @@ const accessTokenGenerator = (id, email) => {
     process.env.ACCESS_TOKEN_SECRET
   );
   return accessTokenGenerator;
+};
+// errorhandler
+const errorHandler = (err, req, res) => {
+  const statusCode = err.statusCode || 504;
+  const errMessage = err.message || "Internal server Error";
+  return res.status(statusCode).json({
+    message: errMessage,
+  });
 };
 
 const registerUser = async (req, res) => {
@@ -141,5 +149,27 @@ const loginUser = async (req, res) => {
     console.log(error);
   }
 };
+const logoutUser = async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+  return res
+    .status(200)
+    .clearCookie("access_token", options)
+    .clearCookie("refresh_token", options)
+    .send("User logged out");
+};
 
-export { registerUser, loginUser };
+export { registerUser, loginUser, logoutUser };
