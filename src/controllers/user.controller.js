@@ -3,6 +3,22 @@ import { uploadOnCloudinary } from "../utils/cloudinaryConfig.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// generating access and refresh token
+const refreshTokenGenerator = (email) => {
+  const refreshTokenGenerator = jwt.sign(
+    { email },
+    process.env.REFRESH_TOKEN_SECRET
+  );
+  return refreshTokenGenerator;
+};
+const accessTokenGenerator = (id, email) => {
+  const accessTokenGenerator = jwt.sign(
+    { id, email },
+    process.env.ACCESS_TOKEN_SECRET
+  );
+  return accessTokenGenerator;
+};
+
 const registerUser = async (req, res) => {
   try {
     const { username, fullName, email, password } = req.body;
@@ -29,7 +45,7 @@ const registerUser = async (req, res) => {
       return res.status(400).send("Error occur while uploading avatar");
     }
 
-    const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN_SECRET);
+    const refreshToken = refreshTokenGenerator(email);
 
     const encrptedPassword = bcryptjs.hashSync(password, 10);
 
@@ -79,14 +95,15 @@ const loginUser = async (req, res) => {
     if (!validUser) {
       return res.status(404).send("User not found");
     }
+
     const validPassword = bcryptjs.compareSync(password, validUser.password);
 
     if (!validPassword) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
-    const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN_SECRET);
+    const refreshToken = refreshTokenGenerator(email);
+    const accessToken = accessTokenGenerator(validUser._id, email);
     validUser.refreshToken = undefined;
     validUser.password = undefined;
     const options = {
@@ -111,6 +128,15 @@ const loginUser = async (req, res) => {
     // if user is successfully logged in check if cookie token===token we provided
     // remove password and refresh token fields from response
     // return the user details in response
+
+    //errors and needs to understand
+    // when send body in form data not working and in raw json its working -----not yet learned
+    // tokens generation in seperate function --done
+    // access token and refresh token working
+    // cors credentials and token options
+    // url encoded and express static
+    // error handler function
+    // register and login api module testing and resgistration time calculation
   } catch (error) {
     console.log(error);
   }
