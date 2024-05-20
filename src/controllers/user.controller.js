@@ -7,24 +7,22 @@ import jwt from "jsonwebtoken";
 const refreshTokenGenerator = (email) => {
   const refreshTokenGenerator = jwt.sign(
     { email },
-    process.env.REFRESH_TOKEN_SECRET
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
   );
   return refreshTokenGenerator;
 };
 const accessTokenGenerator = (id, email) => {
   const accessTokenGenerator = jwt.sign(
     { id, email },
-    process.env.ACCESS_TOKEN_SECRET
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
   );
   return accessTokenGenerator;
-};
-// errorhandler
-const errorHandler = (err, req, res) => {
-  const statusCode = err.statusCode || 504;
-  const errMessage = err.message || "Internal server Error";
-  return res.status(statusCode).json({
-    message: errMessage,
-  });
 };
 
 const registerUser = async (req, res) => {
@@ -172,4 +170,45 @@ const logoutUser = async (req, res) => {
     .send("User logged out");
 };
 
-export { registerUser, loginUser, logoutUser };
+const refreshAccessToken = (req, res) => {
+  try {
+    const incommingRefreshToken = req.cookies.refresh_token;
+    if (!incommingRefreshToken) {
+      return res
+        .status(401)
+        .send("User is not registered || Unautuorized request");
+    }
+
+    const decodedToken = jwt.sign(
+      incommingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const user = User.findOne(decodedToken.id);
+    if (!user) {
+      return res.status(401).send("Unauthorized request");
+    }
+    if (incommingRefreshToken !== user.refreshToken) {
+      return res.status(401).send("Refresh token expire");
+    }
+    const options = {
+      secure: true,
+      httpOnly: true,
+    };
+    const refreshToken = refreshTokenGenerator(email);
+    const accessToken = accessTokenGenerator(validUser._id, email);
+
+    return res
+      .status(200)
+      .cookie("access_token", accessToken, options)
+      .cookie("refresh_token", refreshToken, options)
+      .json({
+        message: "User can continue in session",
+        userData: user,
+        tokens: { refreshToken, accessToken },
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };

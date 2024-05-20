@@ -6,11 +6,16 @@ const verifyJwt = async (req, res, next) => {
     if (!token) {
       return res.status(401).send("Unauthorized request");
     }
+    console.log("Access_token derived from brower cookie", token);
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    console.log("token decoded", decodedToken);
     if (!decodedToken) {
       return res.status(401).send("Unauthorized request");
     }
+    console.log("id=", decodedToken.id, "email=", decodedToken.email);
     const user = await User.findById(decodedToken.id);
+    console.log("the logged in user", user);
+    console.log("user is authorized");
     if (!user) {
       return res.status(401).send("Invalid access token");
     }
